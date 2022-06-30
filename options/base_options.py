@@ -23,7 +23,7 @@ class BaseOptions():
         parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--use_wandb', action='store_true', help='use wandb')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-        parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
+        parser.add_argument('--checkpoints_dir', type=str, default='checkpoint', help='models are saved here')
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels: 3 for RGB and 1 for grayscale')
@@ -57,6 +57,10 @@ class BaseOptions():
         # domain args
         parser.add_argument('--domainA', type=str, default='Cirrus', required=True, help='name of Domain A')
         parser.add_argument('--domainB', type=str, default='Spectralis', required=True, help='name of Domain B')
+
+        parser.add_argument('--data_root', dest='data_root', type=str, default='data', help='Root of the dataset.')
+        parser.add_argument('--dataset', dest='dataset', type=str, default='Retouch', help='Name of the dataset')
+
         self.initialized = True
         return parser
 
@@ -87,7 +91,7 @@ class BaseOptions():
         # save and return the parser
         self.parser = parser
         known, unknown = parser.parse_known_args()
-        return known
+        return known,unknown
 
     def print_options(self, opt):
         """Print and save options
@@ -117,8 +121,13 @@ class BaseOptions():
 
     def parse(self):
         """Parse our options, create checkpoints directory suffix, and set up gpu device."""
-        opt = self.gather_options()
+        opt,unknown = self.gather_options()
         opt.isTrain = self.isTrain   # train or test
+
+        split = opt.data_root.split('/')
+        project_dir = opt.data_root[:-len(split[-1])]
+        opt.checkpoints_dir = project_dir + 'output/' + opt.dataset + '/cyclegan/checkpoint'
+        print(opt.checkpoints_dir)
 
         # process opt.suffix
         if opt.suffix:
