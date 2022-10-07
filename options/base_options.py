@@ -46,7 +46,7 @@ class BaseOptions():
         parser.add_argument('--load_size', type=int, default=286, help='scale images to this size')
         parser.add_argument('--crop_size', type=int, default=256, help='then crop to this size')
         parser.add_argument('--max_dataset_size', type=int, default=float("inf"), help='Maximum number of samples allowed per dataset. If the dataset directory contains more than max_dataset_size, only a subset is loaded.')
-        parser.add_argument('--preprocess', type=str, default='resize_and_crop', help='scaling and cropping of images at load time [resize_and_crop | crop | scale_width | scale_width_and_crop | none]')
+        parser.add_argument('--preprocess', type=str, default='scale_width_and_crop', help='scaling and cropping of images at load time [resize_and_crop | crop | scale_width | scale_width_and_crop | none]')
         parser.add_argument('--no_flip', action='store_true', help='if specified, do not flip the images for data augmentation')
         parser.add_argument('--display_winsize', type=int, default=256, help='display window size for both visdom and HTML')
         # additional parameters
@@ -111,7 +111,10 @@ class BaseOptions():
         print(message)
 
         # save to the disk
-        opt.name = 'cyclegan_' + opt.domainA + '_' + opt.domainB
+        if opt.model == 'cycle_gan':
+            opt.name = 'cyclegan_' + opt.domainA + '_' + opt.domainB
+        else:
+            opt.name = 'pix2pix_' + opt.domainA + '_' + opt.domainB
         expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
         util.mkdirs(expr_dir)
         file_name = os.path.join(expr_dir, '{}_opt.txt'.format(opt.phase))
@@ -126,8 +129,10 @@ class BaseOptions():
 
         split = opt.data_root.split('/')
         project_dir = opt.data_root[:-len(split[-1])]
-        opt.checkpoints_dir = project_dir + 'output/' + opt.dataset + '/cyclegan/checkpoint'
-        print(opt.checkpoints_dir)
+        if opt.model == 'cycle_gan':
+            opt.checkpoints_dir = project_dir + 'output/' + opt.dataset + '/cyclegan/checkpoint'
+        else:
+            opt.checkpoints_dir = project_dir + 'output/' + opt.dataset + '/pix2pix/checkpoint'
 
         # process opt.suffix
         if opt.suffix:
